@@ -7,6 +7,12 @@ gunicorn>=23.0.0
 # Static file serving for production
 whitenoise>=6.0.0
 
+# CORS headers for frontend-backend communication
+django-cors-headers>=4.0.0
+
+# REST framework for API
+djangorestframework>=3.14.0
+
 # For PostgreSQL database on Render (optional, uncomment if needed)
 # dj-database-url>=2.0.0
 # psycopg2-binary>=2.9.0
