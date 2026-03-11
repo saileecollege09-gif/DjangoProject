@@ -1,0 +1,13 @@
+# Django framework
+Django>=5.0,<6.0
+
+# Production server
+gunicorn>=23.0.0
+
+# Static file serving for production
+whitenoise>=6.0.0
+
+# For PostgreSQL database on Render (optional, uncomment if needed)
+# dj-database-url>=2.0.0
+# psycopg2-binary>=2.9.0
+
