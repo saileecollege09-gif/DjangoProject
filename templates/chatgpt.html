@@ -1,90 +1,353 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ChatGPT Clone</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Studio Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: {'chatgpt': {950: '#0a0a0a'}} } } }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    boxShadow: {
+                        glow: '0 0 40px rgba(99, 102, 241, 0.35)',
+                    },
+                    animation: {
+                        float: 'float 6s ease-in-out infinite',
+                        pulseSoft: 'pulseSoft 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                        pulseSoft: {
+                            '0%, 100%': { opacity: '0.6' },
+                            '50%': { opacity: '1' },
+                        },
+                    },
+                },
+            },
+        }
     </script>
+    <style>
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.25);
+            border-radius: 9999px;
+        }
+        .message-enter {
+            animation: fadeInUp .25s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .prose-chat {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white p-8 font-sans">
-    <div id="app" class="max-w-4xl mx-auto h-[80vh] flex flex-col bg-slate-900/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-800/50 overflow-hidden">
-        <div class="p-6 border-b border-slate-800 flex items-center">
-            <div class="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-xl font-bold">AI</div>
-            <div class="ml-4">
-                <h1 class="text-2xl font-bold">ChatGPT Clone</h1>
-                <p class="text-slate-400">Django + Hugging Face Backend</p>
+<body class="min-h-screen overflow-hidden bg-slate-950 text-white">
+    <div class="fixed inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.18),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.18),_transparent_28%),linear-gradient(to_bottom_right,_#020617,_#0f172a,_#111827)]"></div>
+
+    <div class="relative z-10 flex min-h-screen">
+        <aside class="hidden lg:flex w-80 flex-col border-r border-white/10 bg-white/5 backdrop-blur-2xl">
+            <div class="p-6 border-b border-white/10">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 via-indigo-500 to-emerald-400 shadow-glow animate-float">
+                        <span class="text-xl font-black">AI</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-wide">AI Studio</h1>
+                        <p class="text-sm text-slate-300">Django + Hugging Face (Free)</p>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div id="messages" class="flex-1 p-8 overflow-y-auto space-y-6 scrollbar-thin scrollbar-thumb-slate-700">
-            <div class="text-center text-slate-500 text-sm">Start chatting with AI...</div>
-        </div>
-        <div class="p-8 border-t border-slate-800">
-            <div class="flex space-x-4">
-                <input id="input" placeholder="Type your message..." class="flex-1 bg-slate-800/50 border border-slate-700 rounded-2xl px-6 py-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-transparent">
-                <button id="send" class="w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 rounded-2xl flex items-center justify-center transition-all shadow-lg hover:shadow-xl">→</button>
+
+            <div class="p-6 space-y-4">
+                <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+                    <p class="text-xs uppercase tracking-[0.3em] text-violet-300">Status</p>
+                    <div class="mt-3 flex items-center gap-3">
+                        <span class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-sm text-slate-200">Realtime chat ready</span>
+                    </div>
+                </div>
+
+                <div class="rounded-3xl border border-white/10 bg-gradient-to-br from-violet-500/10 to-emerald-400/10 p-5">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-300">Suggestions</p>
+                    <div class="mt-4 space-y-3 text-sm text-slate-100">
+                        <button class="suggestion-btn w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/10 transition" data-text="Explain quantum computing in simple words.">
+                            Explain quantum computing simply
+                        </button>
+                        <button class="suggestion-btn w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/10 transition" data-text="Write a professional email asking for internship status.">
+                            Write a professional email
+                        </button>
+                        <button class="suggestion-btn w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/10 transition" data-text="Give me creative startup name ideas for an AI product.">
+                            Generate startup name ideas
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <div class="mt-auto p-6 pt-0">
+                <div class="rounded-3xl border border-white/10 bg-black/20 p-5 text-sm text-slate-300">
+                    <p class="font-semibold text-white">Powered by Hugging Face (Free Tier)</p>
+                    <p class="mt-2 leading-6">Get your free API token at <code>huggingface.co/settings/tokens</code>. 300 requests/hour free!</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex flex-1 flex-col">
+            <header class="border-b border-white/10 bg-black/10 backdrop-blur-xl">
+                <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.35em] text-violet-300">Interactive assistant</p>
+                        <h2 class="mt-1 text-2xl font-bold">Ask anything. Build faster.</h2>
+                    </div>
+                    <div id="api-status" class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-300">
+                        Ready
+                    </div>
+                </div>
+            </header>
+
+            <section class="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-4 sm:px-6">
+                <div id="messages" class="flex-1 space-y-6 overflow-y-auto rounded-[2rem] border border-white/10 bg-white/5 p-4 backdrop-blur-2xl sm:p-6">
+                    <div id="welcome-card" class="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-6 shadow-2xl">
+                        <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                            <div class="max-w-2xl">
+                                <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-violet-200">
+                                    <span class="h-2 w-2 rounded-full bg-violet-300 animate-pulseSoft"></span>
+                                    AI online experience
+                                </div>
+                                <h3 class="text-3xl font-bold leading-tight">Your futuristic AI workspace is ready.</h3>
+                                <p class="mt-3 text-slate-300 leading-7">
+                                    Chat with your model, generate ideas, draft content, and explore answers in a more immersive interface.
+                                </p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 text-sm text-slate-200">
+                                <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                                    <p class="text-slate-400">Mode</p>
+                                    <p class="mt-1 font-semibold">Conversational AI</p>
+                                </div>
+                                <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                                    <p class="text-slate-400">Experience</p>
+                                    <p class="mt-1 font-semibold">Live + interactive</p>
+                                </div>
+                                <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                                    <p class="text-slate-400">Backend</p>
+                                    <p class="mt-1 font-semibold">Django API</p>
+                                </div>
+                                <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                                    <p class="text-slate-400">Provider</p>
+                                    <p class="mt-1 font-semibold">Hugging Face (Free)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="error-banner" class="mt-4 hidden rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"></div>
+
+                <div class="mt-4 rounded-[2rem] border border-white/10 bg-white/5 p-3 backdrop-blur-2xl">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-wrap gap-2 px-2 pt-2">
+                            <button class="suggestion-btn rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 hover:bg-white/10 transition" data-text="Summarize the benefits of renewable energy.">Renewable energy summary</button>
+                            <button class="suggestion-btn rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 hover:bg-white/10 transition" data-text="Create a 5-day study plan for Python beginners.">Python study plan</button>
+                            <button class="suggestion-btn rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 hover:bg-white/10 transition" data-text="Give me a modern portfolio website hero section copy.">Portfolio hero copy</button>
+                        </div>
+
+                        <div class="flex items-end gap-3">
+                            <div class="flex-1 rounded-[1.5rem] border border-white/10 bg-slate-950/50 px-4 py-3">
+                                <textarea id="input" rows="1" placeholder="Message your AI assistant..." class="max-h-48 min-h-[28px] w-full resize-none bg-transparent text-white placeholder:text-slate-500 focus:outline-none"></textarea>
+                            </div>
+                            <button id="send" class="group flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r from-violet-500 via-indigo-500 to-emerald-400 text-lg font-bold text-white shadow-glow transition hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-50">
+                                <span class="transition group-hover:translate-x-0.5">➜</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between px-2 pb-1 text-xs text-slate-400">
+                            <span>Press Enter to send · Shift+Enter for new line</span>
+                            <span id="char-count">0 characters</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
+
     <script>
         const messagesEl = document.getElementById('messages');
         const inputEl = document.getElementById('input');
         const sendEl = document.getElementById('send');
-        
-        async function addMessage(text, isUser) {
+        const charCountEl = document.getElementById('char-count');
+        const errorBannerEl = document.getElementById('error-banner');
+        const apiStatusEl = document.getElementById('api-status');
+        const welcomeCardEl = document.getElementById('welcome-card');
+
+        function escapeHtml(text) {
             const div = document.createElement('div');
-            div.className = `flex ${isUser ? 'justify-end' : ''}`;
-            div.innerHTML = `<div class="${isUser ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : 'bg-slate-800/50 backdrop-blur'} p-5 rounded-2xl max-w-3xl text-sm shadow-lg">${text}</div>`;
-            messagesEl.appendChild(div);
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function autoResizeTextarea() {
+            inputEl.style.height = 'auto';
+            inputEl.style.height = `${Math.min(inputEl.scrollHeight, 192)}px`;
+            charCountEl.textContent = `${inputEl.value.length} characters`;
+        }
+
+        function setStatus(text, type = 'ready') {
+            apiStatusEl.textContent = text;
+            apiStatusEl.className = 'rounded-full px-4 py-2 text-sm';
+
+            if (type === 'loading') {
+                apiStatusEl.classList.add('border', 'border-amber-400/20', 'bg-amber-400/10', 'text-amber-300');
+                return;
+            }
+
+            if (type === 'error') {
+                apiStatusEl.classList.add('border', 'border-rose-400/20', 'bg-rose-500/10', 'text-rose-300');
+                return;
+            }
+
+            apiStatusEl.classList.add('border', 'border-emerald-400/20', 'bg-emerald-400/10', 'text-emerald-300');
+        }
+
+        function showError(message) {
+            errorBannerEl.textContent = message;
+            errorBannerEl.classList.remove('hidden');
+            setStatus('Error', 'error');
+        }
+
+        function clearError() {
+            errorBannerEl.classList.add('hidden');
+            errorBannerEl.textContent = '';
+        }
+
+        function removeWelcomeCard() {
+            if (welcomeCardEl) {
+                welcomeCardEl.remove();
+            }
+        }
+
+        function addMessage(text, isUser = false, meta = '') {
+            removeWelcomeCard();
+
+            const row = document.createElement('div');
+            row.className = `message-enter flex ${isUser ? 'justify-end' : 'justify-start'}`;
+
+            row.innerHTML = `
+                <div class="max-w-3xl ${isUser ? 'items-end' : 'items-start'} flex flex-col gap-2">
+                    <div class="flex items-center gap-2 text-xs uppercase tracking-[0.25em] ${isUser ? 'justify-end text-emerald-300' : 'text-violet-300'}">
+                        <span>${isUser ? 'You' : 'AI Assistant'}</span>
+                        ${meta ? `<span class="rounded-full border border-white/10 bg-white/5 px-2 py-1 normal-case tracking-normal text-slate-300">${escapeHtml(meta)}</span>` : ''}
+                    </div>
+                    <div class="${isUser ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'border border-white/10 bg-white/10 text-slate-100'} prose-chat rounded-[1.75rem] px-5 py-4 shadow-xl backdrop-blur-xl">
+                        ${escapeHtml(text)}
+                    </div>
+                </div>
+            `;
+
+            messagesEl.appendChild(row);
             messagesEl.scrollTop = messagesEl.scrollHeight;
         }
-        
-        async function showTyping() {
-            const div = document.createElement('div');
-            div.id = 'typing';
-            div.className = 'flex';
-            div.innerHTML = `<div class="bg-slate-800/50 backdrop-blur p-5 rounded-2xl flex items-center space-x-2">
-                <div class="flex space-x-1"><div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0s]"></div><div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.1s]"></div><div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></div></div>
-                <span class="ml-2 text-slate-400">AI typing...</span>
-            </div>`;
-            messagesEl.appendChild(div);
+
+        function addTypingIndicator() {
+            removeWelcomeCard();
+
+            const row = document.createElement('div');
+            row.id = 'typing';
+            row.className = 'message-enter flex justify-start';
+            row.innerHTML = `
+                <div class="flex max-w-xs flex-col gap-2">
+                    <div class="text-xs uppercase tracking-[0.25em] text-violet-300">AI Assistant</div>
+                    <div class="rounded-[1.75rem] border border-white/10 bg-white/10 px-5 py-4 backdrop-blur-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="flex gap-1.5">
+                                <span class="h-2.5 w-2.5 animate-bounce rounded-full bg-violet-300 [animation-delay:0s]"></span>
+                                <span class="h-2.5 w-2.5 animate-bounce rounded-full bg-violet-300 [animation-delay:0.15s]"></span>
+                                <span class="h-2.5 w-2.5 animate-bounce rounded-full bg-violet-300 [animation-delay:0.3s]"></span>
+                            </div>
+                            <span class="text-sm text-slate-300">Thinking...</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            messagesEl.appendChild(row);
             messagesEl.scrollTop = messagesEl.scrollHeight;
-            return div;
+            return row;
         }
-        
-        async function sendMessage() {
-            const text = inputEl.value.trim();
+
+        async function sendMessage(prefilledText = null) {
+            const text = (prefilledText ?? inputEl.value).trim();
             if (!text) return;
-            
+
+            clearError();
             addMessage(text, true);
             inputEl.value = '';
+            autoResizeTextarea();
             sendEl.disabled = true;
-            
-            const typingEl = await showTyping();
-            
+            setStatus('Generating...', 'loading');
+
+            const typingEl = addTypingIndicator();
+
             try {
                 const res = await fetch('/api/chat/', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({message: text})
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
                 });
+
                 const data = await res.json();
-                
+
                 typingEl.remove();
-                if (data.reply) addMessage(data.reply);
-                else addMessage('No response from AI.');
-            } catch(e) {
-                typingEl.remove();
-                addMessage('Network error. Check if Django server running.');
+
+                if (!res.ok) {
+                    showError(data.error || 'Failed to get AI response.');
+                    addMessage(data.error || 'Something went wrong while contacting the AI service.', false, 'backend error');
+                } else if (data.reply) {
+                    addMessage(data.reply, false, data.model || 'AI response');
+                    setStatus('Ready', 'ready');
+                } else {
+                    showError('No response was returned by the AI service.');
+                    addMessage('No response was returned by the AI service.', false, 'empty reply');
+                }
+            } catch (error) {
+                if (typingEl) typingEl.remove();
+                showError('Network error. Make sure your Django server is running and the API is reachable.');
+                addMessage('Network error. Make sure your Django server is running and the API is reachable.', false, 'network');
             }
+
             sendEl.disabled = false;
             inputEl.focus();
         }
-        
-        sendEl.onclick = sendMessage;
-        inputEl.onkeydown = e => e.key === 'Enter' && sendMessage();
+
+        sendEl.addEventListener('click', () => sendMessage());
+
+        inputEl.addEventListener('input', autoResizeTextarea);
+
+        inputEl.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        document.querySelectorAll('.suggestion-btn').forEach((button) => {
+            button.addEventListener('click', () => {
+                const text = button.dataset.text || '';
+                inputEl.value = text;
+                autoResizeTextarea();
+                inputEl.focus();
+            });
+        });
+
+        autoResizeTextarea();
         inputEl.focus();
     </script>
 </body>
 </html>
-

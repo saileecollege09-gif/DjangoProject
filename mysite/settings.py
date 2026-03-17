@@ -171,3 +171,8 @@ REST_FRAMEWORK = {
     ],
 }
 
+# External AI provider settings - Hugging Face (Free Tier)
+# Get your free token at: https://huggingface.co/settings/tokens
+# Set environment variable: set HUGGINGFACE_API_KEY=hf_your_token
+HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY', '')
+HUGGINGFACE_MODEL = os.environ.get('HUGGINGFACE_MODEL', 'gpt2')
