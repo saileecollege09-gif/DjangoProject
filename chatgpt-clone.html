@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Clone - Hugging Face AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { 'chatgpt': { 50: '#f0f9ff', 950: '#0a0a0a' } } } }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .dark .loading-dots span {
+            background: #6b7280; animation: loading 1.4s infinite;
+        }
+        @keyframes loading { 0%,80%,100%{transform:scale(0);opacity:.5} 40%{transform:scale(1);opacity:1} }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white">
+    <!-- ChatGPT Header -->
+    <div class="flex items-center justify-between p-6 border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-blue-500 rounded-xl flex items-center justify-center font-semibold text-lg">AI</div>
+            <div>
+                <h1 class="text-xl font-semibold">ChatGPT Clone</h1>
+                <p class="text-sm text-slate-400">Powered by Hugging Face (Free)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Chat Messages -->
+        <div class="flex-1 p-6 overflow-y-auto space-y-6">
+            <!-- Welcome Message -->
+            <div class="max-w-2xl">
+                <div class="bg-slate-800/50 backdrop-blur p-4 rounded-2xl text-slate-300">
+                    <p>👋 Hello! This is a ChatGPT clone using <strong>Hugging Face free API</strong>.</p>
+                    <p>Ask coding questions, general queries, or anything! Using DialoGPT model.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-6 border-t border-slate-800">
+        <div class="max-w-4xl mx-auto flex items-end space-x-3">
+            <div class="flex-1 relative">
+                <input id="messageInput" type="text" placeholder="Message Hugging Face AI..." 
+                       class="w-full p-4 pr-16 bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:border-slate-600 focus:ring-2 focus:ring-slate-600/50 transition-all duration-200 resize-none" rows="1">
+            </div>
+            <button id="sendButton" class="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const messagesEl = document.querySelector('.overflow-y-auto');
+        const inputEl = document.getElementById('messageInput');
+        const btnEl = document.getElementById('sendButton');
+
+        let conversation = [];
+        const API_URL = 'https://us-east-1.api.huggingface.co/models/microsoft/DialoGPT-medium';
+        const headers = { 'Content-Type': 'application/json' };
+
+        // Add message to UI
+        function addMessage(text, isUser = false) {
+            const msgEl = document.createElement('div');
+            msgEl.className = `max-w-2xl flex ${isUser ? 'justify-end' : 'justify-start'}`;
+            msgEl.innerHTML = `
+                <div class="${isUser ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white' : 'bg-slate-800/50 backdrop-blur text-slate-200'} p-4 rounded-2xl shadow-lg max-w-full">${text}</div>
+            `;
+            messagesEl.appendChild(msgEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // Show loading
+        function showLoading() {
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'max-w-2xl flex justify-start';
+            loadingEl.id = 'loading';
+            loadingEl.innerHTML = `
+                <div class="bg-slate-800/50 backdrop-blur p-4 rounded-2xl text-slate-300 flex items-center space-x-2">
+                    <div class="loading-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <span>Hugging Face AI typing...</span>
+                </div>
+            `;
+            messagesEl.appendChild(loadingEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // Call Hugging Face API
+        async function callHuggingFace(prompt) {
+            conversation.push({ role: 'user', content: prompt });
+            
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    inputs: { past_user_inputs: conversation.slice(-10).map(c => c.content).join('\n'), generated_responses: [], text: prompt }
+                })
+            });
+            
+            if (!response.ok) throw new Error('API rate limit or error');
+            
+            const data = await response.json();
+            const reply = data[0]?.generated_text || 'Sorry, no response from AI.';
+            
+            conversation.push({ role: 'assistant', content: reply });
+            return reply.split('\n').slice(-2).join(' ').substring(0, 500);
+        }
+
+        // Send message
+        async function sendMessage() {
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            addMessage(text, true);
+            inputEl.value = '';
+            btnEl.disabled = true;
+            inputEl.disabled = true;
+
+            showLoading();
+            try {
+                const aiReply = await callHuggingFace(text);
+                document.getElementById('loading')?.remove();
+                addMessage(aiReply);
+            } catch (e) {
+                document.getElementById('loading')?.remove();
+                addMessage('API error (free tier limit?). Try again or use mock mode.');
+                console.error(e);
+            }
+            btnEl.disabled = false;
+            inputEl.disabled = false;
+            inputEl.focus();
+        }
+
+        // Events
+        btnEl.onclick = sendMessage;
+        inputEl.onkeydown = e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage());
+        inputEl.focus();
+    </script>
+</body>
+</html>

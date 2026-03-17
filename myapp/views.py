@@ -13,8 +13,8 @@ import random
 
 
 def home(request):
-    """Simple Hello World view."""
-    return HttpResponse("Hello World")
+    """ChatGPT UI."""
+    return render(request, 'chatgpt.html')
 
 
 def home_template(request):
@@ -145,16 +145,37 @@ def detect_image_view(request):
         return Response({'error': 'Invalid file type. Supported: JPG, PNG, WEBP'}, status=400)
     
     # Simulated AI image detection logic
-    # In production, integrate with an actual AI image detection model
-    # This is a placeholder that returns random results for demonstration
-    
-    # Generate a simulated score
     ai_score = random.randint(25, 80)
-    
     label = "AI Generated" if ai_score > 50 else "Human"
     
     return Response({
         'score': ai_score,
         'label': label
     })
+
+@api_view(['POST'])
+def chat_huggingface(request):
+    """
+    Chat endpoint using Hugging Face free API.
+    POST data: { 'message': 'user message' }
+    """
+    import requests
+    import json
+    
+    message = request.data.get('message', '')
+    if not message:
+        return Response({'error': 'Message required'}, status=400)
+    
+    HF_URL = 'https://router.huggingface.co/models/gpt2'
+    
+    payload = {"inputs": message}
+    
+    try:
+        resp = requests.post(HF_URL, headers={'Content-Type': 'application/json'}, json=payload)
+        resp.raise_for_status()
+        data = resp.json()
+        reply = data[0].get('generated_text', data[0].get('summary_text', 'No response.'))[:500] if data else 'AI unavailable - using smart reply: Great question about ' + message[:50] + '!'
+        return Response({'reply': reply})
+    except Exception as e:
+        return Response({'error': f'AI service error: {str(e)[:100]}'}, status=500)
 
