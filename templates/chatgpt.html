@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ChatGPT Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: {'chatgpt': {950: '#0a0a0a'}} } } }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white p-8 font-sans">
+    <div id="app" class="max-w-4xl mx-auto h-[80vh] flex flex-col bg-slate-900/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-800/50 overflow-hidden">
+        <div class="p-6 border-b border-slate-800 flex items-center">
+            <div class="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-xl font-bold">AI</div>
+            <div class="ml-4">
+                <h1 class="text-2xl font-bold">ChatGPT Clone</h1>
+                <p class="text-slate-400">Django + Hugging Face Backend</p>
+            </div>
+        </div>
+        <div id="messages" class="flex-1 p-8 overflow-y-auto space-y-6 scrollbar-thin scrollbar-thumb-slate-700">
+            <div class="text-center text-slate-500 text-sm">Start chatting with AI...</div>
+        </div>
+        <div class="p-8 border-t border-slate-800">
+            <div class="flex space-x-4">
+                <input id="input" placeholder="Type your message..." class="flex-1 bg-slate-800/50 border border-slate-700 rounded-2xl px-6 py-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-transparent">
+                <button id="send" class="w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 rounded-2xl flex items-center justify-center transition-all shadow-lg hover:shadow-xl">→</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const messagesEl = document.getElementById('messages');
+        const inputEl = document.getElementById('input');
+        const sendEl = document.getElementById('send');
+        
+        async function addMessage(text, isUser) {
+            const div = document.createElement('div');
+            div.className = `flex ${isUser ? 'justify-end' : ''}`;
+            div.innerHTML = `<div class="${isUser ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : 'bg-slate-800/50 backdrop-blur'} p-5 rounded-2xl max-w-3xl text-sm shadow-lg">${text}</div>`;
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+        
+        async function showTyping() {
+            const div = document.createElement('div');
+            div.id = 'typing';
+            div.className = 'flex';
+            div.innerHTML = `<div class="bg-slate-800/50 backdrop-blur p-5 rounded-2xl flex items-center space-x-2">
+                <div class="flex space-x-1"><div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0s]"></div><div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.1s]"></div><div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></div></div>
+                <span class="ml-2 text-slate-400">AI typing...</span>
+            </div>`;
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return div;
+        }
+        
+        async function sendMessage() {
+            const text = inputEl.value.trim();
+            if (!text) return;
+            
+            addMessage(text, true);
+            inputEl.value = '';
+            sendEl.disabled = true;
+            
+            const typingEl = await showTyping();
+            
+            try {
+                const res = await fetch('/api/chat/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: text})
+                });
+                const data = await res.json();
+                
+                typingEl.remove();
+                if (data.reply) addMessage(data.reply);
+                else addMessage('No response from AI.');
+            } catch(e) {
+                typingEl.remove();
+                addMessage('Network error. Check if Django server running.');
+            }
+            sendEl.disabled = false;
+            inputEl.focus();
+        }
+        
+        sendEl.onclick = sendMessage;
+        inputEl.onkeydown = e => e.key === 'Enter' && sendMessage();
+        inputEl.focus();
+    </script>
+</body>
+</html>
+

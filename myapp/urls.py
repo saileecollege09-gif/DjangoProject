@@ -14,5 +14,6 @@ urlpatterns = [
     # AI Detection endpoints
     path('api/detect-text/', views.detect_text_view, name='detect_text'),
     path('api/detect-image/', views.detect_image_view, name='detect_image'),
+    path('api/chat/', views.chat_huggingface, name='chat_hf'),
 ]
 
